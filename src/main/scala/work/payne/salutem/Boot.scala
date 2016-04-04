@@ -8,6 +8,7 @@ import com.pi4j.io.gpio.{GpioPinDigitalInput, PinPullResistance, RaspiPin, GpioF
 import spray.can.Http
 import akka.actor.{ActorSystem, Props}
 import work.payne.salutem.server.WebPage
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -41,17 +42,34 @@ object Boot extends App {
     def fakePinControllerProps() = Props(classOf[FakePinController])
     pinProps = Some(fakePinControllerProps())
   }
+
+
+  // use either fake or real pin controller
   val pinController = sys.actorOf(pinProps.get)
 
-
   def serverCommsProps = Props(classOf[ServerComms])
-
   val serverComms = sys.actorOf(serverCommsProps)
 
   def alarmProps = Props(classOf[Alarm], pinController, serverComms)
-
   val alarm = sys.actorOf(alarmProps, "AlarmActor")
   sys.scheduler.schedule(200 milliseconds, 1000 milliseconds, alarm, "Heartbeat")
+
+
+
+
+//
+//  //send a hello message to alarm actor 15 seconds later
+//  sys.actorSelection("/user/AlarmActor").resolveOne(1 second).map({
+//    ref =>
+//      sys.scheduler.scheduleOnce(8 seconds, ref,  "HELLO")
+//  })
+
+
+
+
+
+
+
 
   def setupPins() = {
     val controller = GpioFactory.getInstance()

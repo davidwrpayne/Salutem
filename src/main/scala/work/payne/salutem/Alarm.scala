@@ -20,7 +20,9 @@ class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor{
 
   override def receive: Receive = {
 
-    case "Status" => sender ! status
+    case "Status" =>
+      log.info(s"Status Request received. Responding with Status:$status")
+      sender ! status
     case e @ "Heartbeat" => pinController ! e
     case ("Heartbeat",zones: Array[Zone]) => {
 
@@ -32,7 +34,7 @@ class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor{
     case e : GpioPinDigitalStateChangeEvent => {
       log.info(s"got state change for pin ${e.getPin.getName}, state ${e.getState.getName}")
     }
-    case _ => log.error("received message dont know what to do with")
+    case m @ _ => log.error(s"received message dont know what to do with: $m")
 
   }
 }

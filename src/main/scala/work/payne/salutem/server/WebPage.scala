@@ -4,6 +4,7 @@ import java.io.File
 
 import akka.event.Logging
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.pattern.ask
 import akka.util.Timeout
@@ -40,8 +41,10 @@ class WebPage extends Actor {
 
 
     case HttpRequest(GET, Uri.Path("/alarm/status"),_,_,_) => {
-      val msg = context.actorSelection("alarm") ? "status"
-      sender ! msg
+      val actorRef = Await.result(context.system.actorSelection("/user/AlarmActor").resolveOne(1 second),2 second)
+      val response = Await.result(actorRef ? "Status",2 seconds)
+      sender ! HttpResponse(entity = HttpEntity(`application/json`,HttpData(s"{status:$response}")))
+
     }
 
 
