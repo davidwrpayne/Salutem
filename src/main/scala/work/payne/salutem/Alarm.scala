@@ -20,6 +20,7 @@ class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor{
 
   override def receive: Receive = {
 
+    case "Status" => sender ! status
     case e @ "Heartbeat" => pinController ! e
     case ("Heartbeat",zones: Array[Zone]) => {
 
@@ -32,7 +33,6 @@ class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor{
       log.info(s"got state change for pin ${e.getPin.getName}, state ${e.getState.getName}")
     }
     case _ => log.error("received message dont know what to do with")
-//    case e @ _ => log.info("received message" + e)
 
   }
 }

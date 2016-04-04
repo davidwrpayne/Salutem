@@ -6,7 +6,7 @@ import spray.json.DefaultJsonProtocol._
 /**
   * Created by david.payne on 3/30/16.
   */
-object JsonFormatProtocal extends DefaultJsonProtocol {
+object JsonFormats extends DefaultJsonProtocol {
 
   implicit val zoneFormat = jsonFormat3(Zone)
   implicit val messageFormat = jsonFormat3(Message)

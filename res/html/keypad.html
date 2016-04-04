@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link type="text/css" href="css/keypad.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+    <script src="controllers/keypad.js"></script>
+</head>
+<body ng-app="alarm">
+
+<!--<script type="text/javascript">-->
+<!--function addCode(key) {-->
+<!--var code = document.forms[0].code;-->
+<!--if (code.value.length < 4) {-->
+<!--code.value = code.value + key;-->
+<!--}-->
+<!--if (code.value.length == 4) {-->
+<!--document.getElementById("message").style.display = "block";-->
+<!--setTimeout(submitForm, 1000);-->
+<!--}-->
+<!--}-->
+
+<!--function submitForm() {-->
+<!--document.forms[0].submit();-->
+<!--}-->
+
+<!--function clear() {-->
+<!--document.forms[0].code.value = "";-->
+<!--}-->
+<!--</script>-->
+<div ng-controller="KeypadController">
+    <table>
+        <tr>
+            <td>
+                <div id="alarmed" class="boxed" ng-show="alarmed == true">Alarmed</div>
+            </td>
+        </tr>
+        <td>
+            <div id="disarmed" class="boxed" ng-show="alarmed == false">Disarmed</div>
+        </td>
+    </table>
+
+    <form action="/" method="get">
+        <table id="keypad" cellpadding="5" cellspacing="3">
+            <tr>
+                <td ng-click="addCode('1');">1</td>
+                <td ng-click="addCode('2');">2</td>
+                <td ng-click="addCode('3');">3</td>
+            </tr>
+            <tr>
+                <td ng-click="addCode('4');">4</td>
+                <td ng-click="addCode('5');">5</td>
+                <td ng-click="addCode('6');">6</td>
+            </tr>
+            <tr>
+                <td ng-click="addCode('7');">7</td>
+                <td ng-click="addCode('8');">8</td>
+                <td ng-click="addCode('9');">9</td>
+            </tr>
+            <tr>
+                <td ng-click="addCode('*');">*</td>
+                <td ng-click="addCode('0');">0</td>
+                <td ng-click="clear();">Clear</td>
+            </tr>
+        </table>
+        <p ng-controller="keypad">{{keypad.code}}</p>
+        <!--<input type="text" name="code" value="" maxlength="4" class="display" readonly="readonly"/>-->
+        <p id="message">ACCESSIGN...</p>
+    </form>
+</div>
+</body>
+</html>

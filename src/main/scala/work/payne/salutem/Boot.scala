@@ -2,13 +2,12 @@ package work.payne.salutem
 
 import java.util.logging.Logger
 
-import akka.event.Logging
-import com.pi4j.io.gpio.{GpioPinDigitalInput, PinPullResistance, RaspiPin, GpioFactory}
-import work.payne.salutem.example.ControlGpioExample
-import java.util.concurrent.Executor
 
+import akka.io.IO
+import com.pi4j.io.gpio.{GpioPinDigitalInput, PinPullResistance, RaspiPin, GpioFactory}
+import spray.can.Http
 import akka.actor.{ActorSystem, Props}
-import scala.concurrent.ExecutionContext
+import work.payne.salutem.server.WebPage
 import scala.concurrent.duration._
 
 /**
@@ -16,25 +15,43 @@ import scala.concurrent.duration._
   */
 object Boot extends App {
   implicit val sys = ActorSystem("SecuritySystem")
+
+  val startWebPage: Boolean = true
+  val fakePinController: Boolean = true
+
   import sys.dispatcher
+
   val log = Logger.getGlobal
 
   log.info("Booting Salutem")
 
-  val pins = setupPins()
+  if (startWebPage) {
+    launchWebPage()
+  }
 
-  def pinControllerProps = Props(classOf[PinController], pins)
+
+
+  var pinProps: Option[Props] = None
+
+  if (!fakePinController) {
+    val pins = setupPins()
+    def pinControllerProps = Props(classOf[PinController], pins)
+    pinProps = Some(pinControllerProps)
+  } else {
+    def fakePinControllerProps() = Props(classOf[FakePinController])
+    pinProps = Some(fakePinControllerProps())
+  }
+  val pinController = sys.actorOf(pinProps.get)
+
+
   def serverCommsProps = Props(classOf[ServerComms])
 
-  val pinController = sys.actorOf(pinControllerProps)
   val serverComms = sys.actorOf(serverCommsProps)
 
-  def alarmProps = Props(classOf[Alarm],pinController,serverComms)
+  def alarmProps = Props(classOf[Alarm], pinController, serverComms)
 
-  val alarm = sys.actorOf(alarmProps)
+  val alarm = sys.actorOf(alarmProps, "AlarmActor")
   sys.scheduler.schedule(200 milliseconds, 1000 milliseconds, alarm, "Heartbeat")
-
-
 
   def setupPins() = {
     val controller = GpioFactory.getInstance()
@@ -43,4 +60,10 @@ object Boot extends App {
     )
     pins
   }
+
+  def launchWebPage() = {
+    val handler = sys.actorOf(Props[WebPage], name = "webpage")
+    IO(Http) ! Http.Bind(handler, interface = "localhost", port = 8080)
+  }
+
 }

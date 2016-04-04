@@ -3,7 +3,7 @@ package work.payne.salutem
 import akka.actor.{ActorRef, Actor}
 import akka.event.Logging
 import spray.json._
-import JsonFormatProtocal._
+import JsonFormats._
 
 class ServerComms extends Actor {
   val log = Logging(context.system, this)
