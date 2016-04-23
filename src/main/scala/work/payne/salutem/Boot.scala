@@ -4,6 +4,7 @@ import java.util.logging.Logger
 
 
 import akka.io.IO
+import com.amazonaws.regions.{Regions, Region}
 import com.pi4j.io.gpio.{GpioPinDigitalInput, PinPullResistance, RaspiPin, GpioFactory}
 import spray.can.Http
 import akka.actor.{ActorSystem, Props}
@@ -55,22 +56,6 @@ object Boot extends App {
   sys.scheduler.schedule(200 milliseconds, 1000 milliseconds, alarm, "Heartbeat")
 
 
-
-
-//
-//  //send a hello message to alarm actor 15 seconds later
-//  sys.actorSelection("/user/AlarmActor").resolveOne(1 second).map({
-//    ref =>
-//      sys.scheduler.scheduleOnce(8 seconds, ref,  "HELLO")
-//  })
-
-
-
-
-
-
-
-
   def setupPins() = {
     val controller = GpioFactory.getInstance()
     val pins: Array[GpioPinDigitalInput] = Array(
@@ -81,7 +66,10 @@ object Boot extends App {
 
   def launchWebPage() = {
     val handler = sys.actorOf(Props[WebPage], name = "webpage")
-    IO(Http) ! Http.Bind(handler, interface = "localhost", port = 8080)
+    IO(Http) ! Http.Bind(handler, interface = "localhost", port = 8010)
+  }
+
+  object SalutemConfig {
   }
 
 }

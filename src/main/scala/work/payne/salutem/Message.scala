@@ -14,8 +14,8 @@ case class Message(status: String, msgType: String, zones: Array[Zone])
 
 
 object Status {
-  val Armed = "Armed"
-  val DisArmed = "DisArmed"
+  val Secure = "Secure"
+  val UnSecure = "UnSecure"
   val Alarmed = "Alarmed"
 }
 
