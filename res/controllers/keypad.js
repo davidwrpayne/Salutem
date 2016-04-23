@@ -1,25 +1,66 @@
 var alarm = angular.module('alarm', []);
-alarm.controller('KeypadController', ['$scope', '$http', function ($scope, $http) {
+alarm.controller('KeypadController', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
 
+    $scope.secure = false;
+    $scope.alarmed = false;
+    $scope.code = "";
+    $scope.loaded = false;
+    $scope.message = "";
 
-    $scope.alarmed = true;
+    $scope.getStatus = function () {
+        $http({
+            method: 'GET',
+            url: '/alarm/status'
+        }).then(updateStatus, errorStatus);
+    }
 
+    $scope.addCode = function (number) {
+        $scope.code = $scope.code + number;
 
-    $scope.greeting = "hello";
-    $scope.code = "123";
+        if ($scope.code.length >= 4) {
+            $timeout(function () {
+                $http.post("/alarm/auth", $scope.code, updateScreen)
+                $scope.refresh();
+            },500);
+        }
+    }
 
+    $scope.refresh = function () {
+        $scope.code = "";
+        $scope.message = "";
+        $scope.getStatus();
+    }
 
-    $scope.getStatus = function() {
-        $http.get("/alarm/status").then(updateStatus(),errorStatus())
+    function updateStatus(response) {
+        if(response.data == 'Invalid Code') {
+            message = "Invalid Code";
+        } else {
+            $scope.secure = response.data == 'Secure' || response.data == 'Alarmed';
+            $scope.alarmed = response.data == 'Alarmed';
+            $scope.code = "";
+            $scope.message = "";
+        }
+    }
+
+    function errorStatus(errorResponse) {
+        $scope.message = "An Error happened contacting Salutem Server";
+    }
+
+    function updateScreen(response) {
+        $scope.message = ""
     }
 
 
-    function updateStatus(data) {
-        $scope.code = data;
-        $scope.alarmed = !$scope.alarmed;
+    $scope.armSystem = function () {
+        $http({
+            method: "POST",
+            url: '/alarm/arm',
+            datatype: "json"
+        }).then(updateStatus,errorStatus);
     }
-    function errorStatus() {
-
+    $scope.init = function () {
+        $scope.loaded = true;
+        $scope.refresh();
     }
 }
 ]);

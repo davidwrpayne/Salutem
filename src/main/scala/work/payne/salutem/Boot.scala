@@ -4,6 +4,7 @@ import java.util.logging.Logger
 
 
 import akka.io.IO
+import com.amazonaws.regions.{Regions, Region}
 import com.pi4j.io.gpio.{GpioPinDigitalInput, PinPullResistance, RaspiPin, GpioFactory}
 import spray.can.Http
 import akka.actor.{ActorSystem, Props}
@@ -55,22 +56,6 @@ object Boot extends App {
   sys.scheduler.schedule(200 milliseconds, 1000 milliseconds, alarm, "Heartbeat")
 
 
-
-
-//
-//  //send a hello message to alarm actor 15 seconds later
-//  sys.actorSelection("/user/AlarmActor").resolveOne(1 second).map({
-//    ref =>
-//      sys.scheduler.scheduleOnce(8 seconds, ref,  "HELLO")
-//  })
-
-
-
-
-
-
-
-
   def setupPins() = {
     val controller = GpioFactory.getInstance()
     val pins: Array[GpioPinDigitalInput] = Array(
@@ -81,7 +66,16 @@ object Boot extends App {
 
   def launchWebPage() = {
     val handler = sys.actorOf(Props[WebPage], name = "webpage")
-    IO(Http) ! Http.Bind(handler, interface = "localhost", port = 8080)
+    IO(Http) ! Http.Bind(handler, interface = "localhost", port = 8010)
+  }
+
+  object SalutemConfig {
+    val aws_sns_arn = "arn:aws:sns:us-west-2:654049141631:HomeSecuritySalutem"
+    val aws_sns_heartbeat_arn = "arn:aws:sns:us-west-2:654049141631:HomeSecuritySalutemHeartbeat"
+    val aws_key_name = "Salutem"
+    val aws_key_id= "AKIAJKKLSCS2FAILIIYA"
+    val aws_secret_key = "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"
+    val aws_region = Regions.US_WEST_2
   }
 
 }
