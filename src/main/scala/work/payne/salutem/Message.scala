@@ -7,7 +7,7 @@ import spray.json._
   */
 
 
-case class Message(status: String, msgType: String, zones: Array[Zone])
+case class Message(status: String, msgType: String, zones: List[Zone])
 
 
 

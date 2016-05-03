@@ -8,6 +8,7 @@ import com.amazonaws.regions.{Regions, Region}
 import com.pi4j.io.gpio.{GpioPinDigitalInput, PinPullResistance, RaspiPin, GpioFactory}
 import spray.can.Http
 import akka.actor.{ActorSystem, Props}
+import work.payne.salutem.InternalActorMessages.Heartbeat
 import work.payne.salutem.server.WebPage
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -17,6 +18,7 @@ import scala.concurrent.duration._
   */
 object Boot extends App {
   implicit val sys = ActorSystem("SecuritySystem")
+//  implicit val heartbeatScheduler = sys.actorOf(Props(classOf[te]),"HeartBeatScheduler")
 
   val startWebPage: Boolean = true
   val fakePinController: Boolean = true
@@ -46,14 +48,14 @@ object Boot extends App {
 
 
   // use either fake or real pin controller
-  val pinController = sys.actorOf(pinProps.get)
+  val pinController = sys.actorOf(pinProps.get,"PinControllerActor")
 
   def serverCommsProps = Props(classOf[ServerComms])
-  val serverComms = sys.actorOf(serverCommsProps)
+  val serverComms = sys.actorOf(serverCommsProps,"ServerCommsActor")
 
   def alarmProps = Props(classOf[Alarm], pinController, serverComms)
   val alarm = sys.actorOf(alarmProps, "AlarmActor")
-  sys.scheduler.schedule(200 milliseconds, 1000 milliseconds, alarm, "Heartbeat")
+  sys.scheduler.schedule(200 milliseconds, 1000 milliseconds, alarm, Heartbeat(None))
 
 
   def setupPins() = {

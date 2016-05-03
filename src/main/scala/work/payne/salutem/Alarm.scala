@@ -1,9 +1,11 @@
 package work.payne.salutem
 
+import akka.actor.Status.Status
 import akka.actor.{ActorRef, Actor}
 import akka.actor.Actor.Receive
 import akka.event.Logging
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent
+import work.payne.salutem.InternalActorMessages._
 
 
 /**
@@ -12,32 +14,32 @@ import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent
 class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor {
   val log = Logging(context.system, this)
   var status: String = Status.UnSecure
-  var zones: Array[Zone] = Array()
+  var zones: List[Zone] = List()
 
-  pinController !("registerHandler", self) // register the controller for listening
-  serverComms !("registerHandler", self)
+  pinController ! RegisterHandler(self) // register the controller for listening
+  serverComms ! RegisterHandler(self)
 
 
   override def receive: Receive = {
 
-    // request zone heartbeat from pin controller
-    case e @ "Heartbeat" => {
-      pinController ! e
-      serverComms ! e
+    // got heart beat  now need to request a zone heartbeat from pin controller.
+    case Heartbeat(None) => {
+      pinController ! Heartbeat(None)
+      serverComms ! Heartbeat(None)
     }
 
     // receive zone heartbeat from pin controller
-    case ("Heartbeat", zones: Array[Zone]) => {
+    case Heartbeat(Some(zones)) => {
       //got a heartbeat of up to date zones from the pinController
       this.zones = zones
       serverComms ! Message(status, MsgType.HeartBeat, zones)
     }
 
-    case "Status" =>
+    case _: StatusRequest =>
       log.info(s"Status Request received. Responding with Status:$status")
       sender ! status
 
-    case "Arm" => {
+    case _:Arm => {
       if (status == Status.UnSecure) {
         status = Status.Secure
       }
@@ -53,7 +55,7 @@ class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor {
       }
     }
 
-    case ("Code",code) => {
+    case Code(code) => {
       // for handling of a valid code input
       if(code.equals("1373")) {
         log.info("Valid code input")
@@ -61,18 +63,24 @@ class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor {
           log.info("reseting system")
           status = Status.UnSecure
         }
-        if ( status == Status.Secure) {
+        else if ( status == Status.Secure) {
           log.info("disarming system")
           status = Status.UnSecure
           sender ! status
-        }}
+        }
+        else if ( status == Status.UnSecure) {
+          log.info("code input while system unsecure")
+          sender ! status
+        }
+
+      }
       else { log.info(s"Invalid code: ${code}")
         sender ! "Invalid Code"
         serverComms ! ServerCommMessage(s"Invalid Code input.")
       }
     }
 
-    case m@_ => log.error(s"received message dont know what to do with: $m")
+    case m@_ => log.error(s"received message dont know what to do with: $m which came from ${sender().path}")
 
   }
 }
