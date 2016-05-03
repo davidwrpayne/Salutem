@@ -3,6 +3,8 @@ package work.payne.salutem.server
 import java.io.File
 
 import akka.event.Logging
+import work.payne.salutem.InternalActorMessages
+import work.payne.salutem.InternalActorMessages._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -49,7 +51,7 @@ class WebPage extends Actor {
 
     case HttpRequest(GET, Uri.Path("/alarm/status"),_,_,_) => {
       val actorRef = Await.result(context.system.actorSelection("/user/AlarmActor").resolveOne(1 second),2 second)
-      val response = Await.result(actorRef ? "Status",2 seconds)
+      val response = Await.result(actorRef ? StatusRequest(),2 seconds)
       sender ! HttpResponse(entity = HttpEntity(`text/html`,HttpData(s"$response")))
 
     }
@@ -62,13 +64,13 @@ class WebPage extends Actor {
       log.info(s"received code for auth: ${userCode}")
 
       val actorRef = Await.result(context.system.actorSelection("/user/AlarmActor").resolveOne(1 second),2 second)
-      val response = Await.result(actorRef ? ("Code",userCode),2 seconds)
+      val response = Await.result(actorRef ? Code(userCode),2 seconds)
       sender ! HttpResponse(entity = HttpEntity(`text/html`,HttpData(response.toString)))
     }
     case HttpRequest(POST, Uri.Path("/alarm/arm"), _, _, _) => {
       log.info(s"received arm request ")
       val actorRef = Await.result(context.system.actorSelection("/user/AlarmActor").resolveOne(1 second),2 second)
-      val response = Await.result(actorRef ? "Arm",2 seconds)
+      val response = Await.result(actorRef ? Arm(),2 seconds)
       sender ! HttpResponse(entity = HttpEntity(`text/html`,HttpData(response.toString)))
 
     }

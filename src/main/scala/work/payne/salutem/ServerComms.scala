@@ -15,6 +15,7 @@ import spray.json._
 import JsonFormats._
 import sun.plugin2.message.HeartbeatMessage
 import work.payne.salutem.Boot.SalutemConfig
+import work.payne.salutem.InternalActorMessages.{ServerCommMessage, RegisterHandler, Heartbeat}
 import collection.JavaConverters._
 
 class ServerComms extends Actor {
@@ -28,11 +29,11 @@ class ServerComms extends Actor {
 
 
   def receive = {
-    case ("registerHandler", listener: ActorRef) => eventListeners = eventListeners :+ listener
+    case RegisterHandler(listener) => eventListeners = eventListeners :+ listener
     case msg: Message => {
       log.debug(msg.toJson.toString())
     }
-    case e @ "Heartbeat"  =>
+    case Heartbeat(None)  =>
       val msg = "heartbeat"
       val topicArn = SalutemConfig.aws_sns_heartbeat_arn
       try {
@@ -60,7 +61,7 @@ class ServerComms extends Actor {
 //        val result = awsCloudWatchClient.getMetricStatistics(request)
 //        log.info(result.toString)
       } catch {
-        case e => log.error(s"There is an error sending heartbeat to server. ${e.getClass.getName} ${e.getMessage}")
+        case e: Throwable=> log.error(s"There is an error sending heartbeat to server. ${e.getClass.getName} ${e.getMessage}")
       }
     case ServerCommMessage(message) => {
       val msg = "Security Alert. Zone Breached!: "
