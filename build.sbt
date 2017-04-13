@@ -28,3 +28,10 @@ libraryDependencies ++= {
     "com.amazonaws"       %  "aws-java-sdk"  % awsV
   )
 }
+
+
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case PathList("reference.conf") => MergeStrategy.concat
+  case x => MergeStrategy.first
+}
