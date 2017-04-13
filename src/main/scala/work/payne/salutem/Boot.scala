@@ -21,7 +21,7 @@ object Boot extends App {
 //  implicit val heartbeatScheduler = sys.actorOf(Props(classOf[te]),"HeartBeatScheduler")
 
   val startWebPage: Boolean = true
-  val fakePinController: Boolean = true
+  val fakePinController: Boolean = false
 
   import sys.dispatcher
 
@@ -50,10 +50,7 @@ object Boot extends App {
   // use either fake or real pin controller
   val pinController = sys.actorOf(pinProps.get,"PinControllerActor")
 
-  def serverCommsProps = Props(classOf[ServerComms])
-  val serverComms = sys.actorOf(serverCommsProps,"ServerCommsActor")
-
-  def alarmProps = Props(classOf[Alarm], pinController, serverComms)
+  def alarmProps = Props(classOf[Alarm], pinController)
   val alarm = sys.actorOf(alarmProps, "AlarmActor")
   sys.scheduler.schedule(200 milliseconds, 1000 milliseconds, alarm, Heartbeat(None))
 
@@ -61,7 +58,7 @@ object Boot extends App {
   def setupPins() = {
     val controller = GpioFactory.getInstance()
     val pins: Array[GpioPinDigitalInput] = Array(
-      controller.provisionDigitalInputPin(RaspiPin.GPIO_01, "Front Door", PinPullResistance.PULL_DOWN)
+      controller.provisionDigitalInputPin(RaspiPin.GPIO_27, "Front Door", PinPullResistance.PULL_DOWN)
     )
     pins
   }

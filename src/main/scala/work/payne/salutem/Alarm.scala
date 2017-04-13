@@ -11,13 +11,13 @@ import work.payne.salutem.InternalActorMessages._
 /**
   * Created by david.payne on 3/29/16.
   */
-class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor {
+class Alarm(pinController: ActorRef) extends Actor {
   val log = Logging(context.system, this)
   var status: String = Status.UnSecure
   var zones: List[Zone] = List()
 
   pinController ! RegisterHandler(self) // register the controller for listening
-  serverComms ! RegisterHandler(self)
+//  serverComms ! RegisterHandler(self)
 
 
   override def receive: Receive = {
@@ -25,14 +25,14 @@ class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor {
     // got heart beat  now need to request a zone heartbeat from pin controller.
     case Heartbeat(None) => {
       pinController ! Heartbeat(None)
-      serverComms ! Heartbeat(None)
+
     }
 
     // receive zone heartbeat from pin controller
     case Heartbeat(Some(zones)) => {
       //got a heartbeat of up to date zones from the pinController
       this.zones = zones
-      serverComms ! Message(status, MsgType.HeartBeat, zones)
+//      serverComms ! Message(status, MsgType.HeartBeat, zones)
     }
 
     case _: StatusRequest =>
@@ -51,7 +51,7 @@ class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor {
       if (status != Status.UnSecure) {
         status = Status.Alarmed
         log.info("Breach occured")
-        serverComms ! ServerCommMessage(s"Pin state changed ${e.getPin.getName}, state ${e.getState.getName}")
+//        serverComms ! ServerCommMessage(s"Pin state changed ${e.getPin.getName}, state ${e.getState.getName}")
       }
     }
 
@@ -76,7 +76,7 @@ class Alarm(pinController: ActorRef, serverComms: ActorRef) extends Actor {
       }
       else { log.info(s"Invalid code: ${code}")
         sender ! "Invalid Code"
-        serverComms ! ServerCommMessage(s"Invalid Code input.")
+//        serverComms ! ServerCommMessage(s"Invalid Code input.")
       }
     }
 
