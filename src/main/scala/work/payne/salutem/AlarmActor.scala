@@ -11,7 +11,7 @@ import work.payne.salutem.InternalActorMessages._
 /**
   * Created by david.payne on 3/29/16.
   */
-class Alarm(pinController: ActorRef) extends Actor {
+class AlarmActor(pinController: ActorRef) extends Actor {
   val log = Logging(context.system, this)
   var status: String = Status.UnSecure
   var zones: List[Zone] = List()
