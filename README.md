@@ -3,6 +3,9 @@
 
 This project is supposed to be a security system for the raspberry pi written in scala.
 
+It is currrently a major Work in progress.
+
+
 ## installation
 to run this you need sbt and scala
 

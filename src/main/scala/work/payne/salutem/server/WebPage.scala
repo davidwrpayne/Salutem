@@ -2,30 +2,24 @@ package work.payne.salutem.server
 
 import java.io.File
 
+import akka.actor._
 import akka.event.Logging
-import work.payne.salutem.InternalActorMessages
+import akka.pattern.ask
+import akka.util.Timeout
+import spray.can.Http
+import spray.http.HttpMethods._
+import spray.http.MediaTypes._
+import spray.http._
 import work.payne.salutem.InternalActorMessages._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import akka.pattern.ask
-import akka.util.Timeout
-import akka.actor._
-import spray.can.Http
-import spray.can.server.Stats
-import spray.util._
-import spray.http._
-import HttpMethods._
-import MediaTypes._
-import scala.io._
-import spray.can.Http.RegisterChunkHandler
 
 /**
   * Created by david.payne on 3/30/16.
   */
 class WebPage extends Actor {
   implicit val timeout: Timeout = 1.second // for the actor 'asks'
-  import context.dispatcher
 
   val log = Logging(context.system, this)
   // ExecutionContext for the futures and scheduler
@@ -37,6 +31,7 @@ class WebPage extends Actor {
 
 
     case HttpRequest(GET, Uri.Path("/"), _, _, _) =>
+      log.info("handling GET to /")
       sender ! getRespFromFile("/html/keypad.html",`text/html`)
     case HttpRequest(GET, Uri.Path("/css/keypad.css"), _, _, _) =>
       sender ! getRespFromFile("/css/keypad.css",`text/css`)
@@ -52,7 +47,7 @@ class WebPage extends Actor {
     case HttpRequest(GET, Uri.Path("/alarm/status"),_,_,_) => {
       val actorRef = Await.result(context.system.actorSelection("/user/AlarmActor").resolveOne(1 second),2 second)
       val response = Await.result(actorRef ? StatusRequest(),2 seconds)
-      sender ! HttpResponse(entity = HttpEntity(`text/html`,HttpData(s"$response")))
+      sender ! HttpResponse(entity = HttpEntity(`text/html`, HttpData(s"$response")))
 
     }
 
@@ -106,11 +101,9 @@ class WebPage extends Actor {
     //      }
   }
 
-  import spray.routing._
-
   ////////////// helpers //////////////
   def getRespFromFile(src: String, entityType: ContentType): HttpResponse = {
-    val file = new File(s"./res$src")
+    val file = new File(s"./webpage$src")
     val data = HttpData(file)
     lazy val resp = HttpResponse(entity = HttpEntity(entityType,data))
     resp

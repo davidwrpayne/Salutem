@@ -1,16 +1,11 @@
 package work.payne.salutem
 
-import akka.actor.Status.Status
-import akka.actor.{ActorRef, Actor}
-import akka.actor.Actor.Receive
+import akka.actor.{Actor, ActorRef}
 import akka.event.Logging
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent
 import work.payne.salutem.InternalActorMessages._
 
 
-/**
-  * Created by david.payne on 3/29/16.
-  */
 class AlarmActor(pinController: ActorRef) extends Actor {
   val log = Logging(context.system, this)
   var status: String = Status.UnSecure
