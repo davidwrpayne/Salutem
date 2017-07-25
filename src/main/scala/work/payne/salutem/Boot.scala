@@ -4,6 +4,7 @@ import java.util.logging.Logger
 
 import akka.io.IO
 import com.typesafe.config.ConfigFactory
+import work.payne.salutem.server.AlarmApi
 //import com.amazonaws.regions.{Regions, Region}
 import akka.actor.{ActorSystem, Props}
 import com.pi4j.io.gpio.{GpioFactory, GpioPinDigitalInput, PinPullResistance, RaspiPin}
@@ -17,17 +18,13 @@ object Boot extends App {
   implicit val sys = ActorSystem("SecuritySystem")
 //  implicit val heartbeatScheduler = sys.actorOf(Props(classOf[te]),"HeartBeatScheduler")
 
-  val startWebPage: Boolean = true
-
   import sys.dispatcher
 
   val log = Logger.getGlobal
 
   log.info("Booting Salutem")
 
-  if (startWebPage) {
-    launchWebPage()
-  }
+  launchAlarmApi()
 
 
 
@@ -81,9 +78,9 @@ object Boot extends App {
     pins
   }
 
-  def launchWebPage() = {
-    val handler = sys.actorOf(Props[WebPage], name = "webpage")
-    IO(Http) ! Http.Bind(handler, interface = "localhost", port = 8010)
+  def launchAlarmApi() = {
+    val handler = sys.actorOf(Props(new AlarmApi()), name = "alarm-api")
+    IO(Http) ! Http.Bind(handler, interface = "localhost", port = 13731)
   }
 
   object SalutemConfig {
