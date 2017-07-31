@@ -1,13 +1,24 @@
 package work.payne.salutem.server
 
+import akka.event.Logging
 import spray.routing.{HttpServiceActor, RequestContext, Route}
 import work.payne.salutem.models.HealthCheck
 import spray.json._
 
 class AlarmApi() extends HttpServiceActor {
+  val log = Logging(context.system, this)
+
+  val alarmController = AlarmController()
+
+
+
   override def receive: Receive =
     runRoute(
-      healthEndpoint()
+
+      healthEndpoint() ~
+      webpageResourcesEndpoint() ~
+
+      alarmApiEndpoints()
     )
 
 
@@ -21,8 +32,35 @@ class AlarmApi() extends HttpServiceActor {
     path("health") {
       (get & pathEndOrSingleSlash) { ctx =>
         healthController(ctx)
-//        ctx.complete("healthy")
       }
     }
   }
+
+  def webpageResourcesEndpoint(): Route = {
+    path("alarm" / Rest ) { pathRest =>
+      getFromResource(s"webpage/$pathRest")
+    }
+  }
+
+
+
+
+  def alarmApiEndpoints(): Route = {
+    pathPrefix("api") {
+
+      get {
+        path("status") { ctx =>
+          alarmController.getStatus(ctx)
+        }
+      }
+    }
+  }
+
+
+
+
+
+
+
+
 }

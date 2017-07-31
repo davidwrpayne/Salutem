@@ -1,5 +1,6 @@
 package work.payne.salutem
 
+import java.net.URL
 import java.util.logging.Logger
 
 import akka.io.IO
@@ -45,6 +46,13 @@ object Boot extends App {
 
   val alarm = sys.actorOf(alarmProps, "AlarmActor")
   sys.scheduler.schedule(200 milliseconds, 10000 milliseconds, alarm, Heartbeat(None))
+
+
+//
+//  val t = getClass.getResourceAsStream("/webpage/controllers/keypad.js")
+//  val s = scala.io.Source.fromInputStream(t).mkString
+//  println(s"stream ${s}")
+
 
 
   def setupPins() = {
