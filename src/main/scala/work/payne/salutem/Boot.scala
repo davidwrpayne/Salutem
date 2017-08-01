@@ -3,9 +3,10 @@ package work.payne.salutem
 import java.net.URL
 import java.util.logging.Logger
 
+import akka.actor.ActorRef
 import akka.io.IO
 import com.typesafe.config.ConfigFactory
-import work.payne.salutem.server.AlarmApi
+import work.payne.salutem.server.{AlarmApi, AlarmController}
 //import com.amazonaws.regions.{Regions, Region}
 import akka.actor.{ActorSystem, Props}
 import com.pi4j.io.gpio.{GpioFactory, GpioPinDigitalInput, PinPullResistance, RaspiPin}
@@ -17,6 +18,7 @@ import scala.concurrent.duration._
 
 object Boot extends App {
   implicit val sys = ActorSystem("SecuritySystem")
+//  implicit val context =
 //  implicit val heartbeatScheduler = sys.actorOf(Props(classOf[te]),"HeartBeatScheduler")
 
   import sys.dispatcher
@@ -24,9 +26,6 @@ object Boot extends App {
   val log = Logger.getGlobal
 
   log.info("Booting Salutem")
-
-  launchAlarmApi()
-
 
 
   var pinProps: Option[Props] = if (!SalutemConfig.fakePinController) {
@@ -44,7 +43,11 @@ object Boot extends App {
 
   def alarmProps = Props(classOf[AlarmActor], pinController)
 
+  //start AlarmActor
   val alarm = sys.actorOf(alarmProps, "AlarmActor")
+
+  // start api actor
+  startApiActor(alarm)
   sys.scheduler.schedule(200 milliseconds, 10000 milliseconds, alarm, Heartbeat(None))
 
 
@@ -86,8 +89,9 @@ object Boot extends App {
     pins
   }
 
-  def launchAlarmApi() = {
-    val handler = sys.actorOf(Props(new AlarmApi()), name = "alarm-api")
+  def startApiActor(alarmActor: ActorRef) = {
+    val controller = AlarmController(alarmActor)
+    val handler = sys.actorOf(Props(new AlarmApi(controller)), name = "alarm-api")
     IO(Http) ! Http.Bind(handler, interface = "localhost", port = 13731)
   }
 

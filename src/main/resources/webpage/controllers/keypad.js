@@ -32,11 +32,12 @@ alarm.controller('KeypadController', ['$scope', '$http', '$timeout', function ($
     }
 
     function updateStatus(response) {
-        if(response.data == 'Invalid Code') {
+        var alarmStatus = response.data.alarmStatus;
+        if(alarmStatus == 'Invalid Code') {
             message = "Invalid Code";
         } else {
-            $scope.secure = response.data == 'Secure' || response.data == 'Alarmed';
-            $scope.alarmed = response.data == 'Alarmed';
+            $scope.secure = alarmStatus == 'Secure' || alarmStatus == 'Alarmed';
+            $scope.alarmed = alarmStatus == 'Alarmed';
             $scope.code = "";
             $scope.message = "";
         }

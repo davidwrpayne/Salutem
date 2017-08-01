@@ -1,9 +1,14 @@
 package work.payne.salutem
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorContext, ActorRef, ActorSystem}
 import akka.event.Logging
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent
 import work.payne.salutem.InternalActorMessages._
+import akka.pattern._
+import akka.util.Timeout
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 
 class AlarmActor(pinController: ActorRef) extends Actor {
@@ -52,7 +57,7 @@ class AlarmActor(pinController: ActorRef) extends Actor {
 
     case Code(code) => {
       // for handling of a valid code input
-      if(code.equals("1373")) {
+      if(code.equals("1212")) {
         log.info("Valid code input")
         if( status == Status.Alarmed) {
           log.info("reseting system")
