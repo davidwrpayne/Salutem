@@ -36,8 +36,8 @@ alarm.controller('KeypadController', ['$scope', '$http', '$timeout', function ($
         if(alarmStatus == 'Invalid Code') {
             message = "Invalid Code";
         } else {
-            $scope.secure = alarmStatus == 'Secure' || alarmStatus == 'Alarmed';
-            $scope.alarmed = alarmStatus == 'Alarmed';
+            $scope.secure = alarmStatus == 'armed' || alarmStatus == 'alarmed';
+            $scope.alarmed = alarmStatus == 'alarmed';
             $scope.code = "";
             $scope.message = "";
         }

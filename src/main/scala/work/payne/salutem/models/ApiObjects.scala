@@ -11,7 +11,8 @@ object ApiObjects {
     saltedCode: Option[String],
     alarmStatus: Option[String],
     zones: Option[List[ZoneObject]],
-    requiredZones: Option[List[ZoneObject]]
+    requiredZones: Option[List[ZoneObject]],
+    error: Option[String]
   )
 
 

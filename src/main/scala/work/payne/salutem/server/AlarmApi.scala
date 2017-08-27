@@ -23,7 +23,6 @@ class AlarmApi(alarmController: AlarmController)(implicit ec: ExecutionContext) 
 
   def healthController(ctx: RequestContext): Unit = {
     val status = HealthCheck("healthy", api=true, alarm = false)
-
     ctx.complete(status.toJson.toString())
   }
 
@@ -51,6 +50,7 @@ class AlarmApi(alarmController: AlarmController)(implicit ec: ExecutionContext) 
       } ~
       post {
         path("auth") { ctx =>
+          
           ctx.complete(alarmController.auth("1123"))
         }
       }

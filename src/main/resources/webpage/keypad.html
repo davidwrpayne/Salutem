@@ -10,8 +10,8 @@
 <body ng-app="alarm">
 
 <div ng-controller="KeypadController"  data-ng-init="init()" ng-show="loaded == true">
-    <div id="secured" class="boxed" ng-show="secure == true && loaded == true">Secured</div>
-    <div id="unsecured" class="boxed" ng-show="secure == false && loaded == true">UnSecured</div>
+    <div id="armed" class="boxed" ng-show="secure == true && loaded == true">Armed</div>
+    <div id="disarmed" class="boxed" ng-show="secure == false && loaded == true">Disarmed</div>
     <div id="alarmed" class="redBoxed" ng-show="alarmed == true">Alarmed</div>
 
 
