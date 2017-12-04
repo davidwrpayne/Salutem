@@ -1,86 +1,68 @@
 package work.payne.salutem
 
-import akka.actor.{Actor, ActorContext, ActorRef, ActorSystem}
-import akka.event.Logging
-import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent
-import work.payne.salutem.InternalActorMessages._
-import akka.pattern._
-import akka.util.Timeout
+import java.util.concurrent.TimeUnit
 
-import scala.concurrent.duration._
+import akka.actor.{Actor, ActorRef}
+import work.payne.salutem.AlarmActor.Methods._
+import work.payne.salutem.api.models._
+import akka.pattern.ask
+
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.TimeUnit
 
+/**
+  * Created by dpayne on 11/24/17.
+  */
+class AlarmActor(initialZones: List[Zone], initialPins: List[Pin]) extends Actor {
 
-class AlarmActor(pinController: ActorRef) extends Actor {
-  val log = Logging(context.system, this)
-  var status: String = Status.UnSecure
-  var zones: List[Zone] = List()
-
-  pinController ! RegisterHandler(self) // register the controller for listening
-//  serverComms ! RegisterHandler(self)
-
+  var alarm = Alarm(
+    alarmStatus = AlarmStatuses.Disarmed,
+    alarmTime = None,
+    zonesRequired = initialZones,
+    allZones = initialZones,
+    openPins = List.empty[Pin],
+    closedPins = List.empty[Pin],
+    allPins = List.empty[Pin],
+    timestamp = System.currentTimeMillis()
+  )
 
   override def receive: Receive = {
-
-    // got heart beat  now need to request a zone heartbeat from pin controller.
-    case Heartbeat(None) => {
-      pinController ! Heartbeat(None)
-
-    }
-
-    // receive zone heartbeat from pin controller
-    case Heartbeat(Some(zones)) => {
-      //got a heartbeat of up to date zones from the pinController
-      this.zones = zones
-//      serverComms ! Message(status, MsgType.HeartBeat, zones)
-    }
-
-    case _: StatusRequest =>
-      log.info(s"Status Request received. Responding with Status:$status")
-      sender ! status
-
-    case _:Arm => {
-      if (status == Status.UnSecure) {
-        status = Status.Secure
-      }
-      sender ! status
-    }
-
-    case e: GpioPinDigitalStateChangeEvent => {
-      log.info(s"got state change for pin ${e.getPin.getName}, state ${e.getState.getName}")
-      if (status != Status.UnSecure) {
-        status = Status.Alarmed
-        log.info("Breach occured")
-//        serverComms ! ServerCommMessage(s"Pin state changed ${e.getPin.getName}, state ${e.getState.getName}")
-      }
-    }
-
-    case Code(code) => {
-      // for handling of a valid code input
-      if(code.equals("1212")) {
-        log.info("Valid code input")
-        if( status == Status.Alarmed) {
-          log.info("reseting system")
-          status = Status.UnSecure
-        }
-        else if ( status == Status.Secure) {
-          log.info("disarming system")
-          status = Status.UnSecure
-          sender ! status
-        }
-        else if ( status == Status.UnSecure) {
-          log.info("code input while system unsecure")
-          sender ! status
-        }
-
-      }
-      else { log.info(s"Invalid code: ${code}")
-        sender ! "Invalid Code"
-//        serverComms ! ServerCommMessage(s"Invalid Code input.")
-      }
-    }
-
-    case m@_ => log.error(s"received message dont know what to do with: $m which came from ${sender().path}")
-
+    case GetAlarm => sender ! alarm
+    case SetAlarm(a) => this.alarm = a; sender ! this.alarm
+    case Disarm => this.alarm = this.alarm.copy(alarmStatus = AlarmStatuses.Disarmed); sender ! this.alarm
+    case Arm => this.alarm = this.alarm.copy(alarmStatus = AlarmStatuses.Armed); sender ! this.alarm
+    case e@_ => println(s"AlarmActor received an unknown message ${e.toString}"); sender ! this.alarm // TODO send error object instead?
   }
+}
+
+
+object AlarmActor {
+  implicit val timeout = akka.util.Timeout(300, TimeUnit.MILLISECONDS)
+
+  def getAlarm()(implicit ec: ExecutionContext, actorRef: ActorRef): Future[Alarm] = {
+    actorRef.ask(GetAlarm).map{_.asInstanceOf[Alarm]}
+  }
+
+  def setAlarm(alarm:Alarm)(implicit ec: ExecutionContext, actorRef: ActorRef): Future[Alarm] = {
+    actorRef.ask(SetAlarm(alarm)).map{_.asInstanceOf[Alarm]}
+  }
+
+  def disarm()(implicit  ec: ExecutionContext, actorRef: ActorRef): Future[Alarm] = {
+    actorRef.ask(Disarm).map{_.asInstanceOf[Alarm]}
+  }
+
+  def arm()(implicit  ec: ExecutionContext, actorRef: ActorRef): Future[Alarm] = {
+    actorRef.ask(Arm).map{_.asInstanceOf[Alarm]}
+  }
+
+  object Methods {
+    sealed trait AlarmActorMethods
+
+    case class GetAlarm() extends AlarmActorMethods
+    case class SetAlarm(alarm: Alarm) extends AlarmActorMethods
+    case class Disarm() extends AlarmActorMethods
+    case class Arm() extends AlarmActorMethods
+  }
+
+
 }
