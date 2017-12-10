@@ -2,15 +2,13 @@ package work.payne.salutem
 
 import java.util.logging.Logger
 
-import akka.actor.ActorRef
 import akka.http.scaladsl.Http
-import akka.io.IO
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import work.payne.salutem.server.WebServer
-//import com.amazonaws.regions.{Regions, Region}
 import akka.actor.{ActorSystem, Props}
 import com.pi4j.io.gpio.{GpioFactory, GpioPinDigitalInput, PinPullResistance, RaspiPin}
+import work.payne.salutem.api.models.{Pin, Zone}
 
 object Boot extends App {
   implicit val sys = ActorSystem("SecuritySystem")
@@ -18,10 +16,19 @@ object Boot extends App {
   implicit val ec  = sys.dispatcher
   val log = Logger.getGlobal
 
-
   log.info("Booting Security System")
 
-  val alarmProps = Props[AlarmActor]
+  val DeployedOnPi: Boolean = false
+
+
+  val allPins = if( DeployedOnPi) setupPins() else List.empty[Pin]
+  val allPinsZone = Zone(1, "AllPins", pins = List.empty[Pin])
+
+  val allZones = List(
+    allPinsZone
+  )
+
+  val alarmProps = Props(new AlarmActor(allZones, allPins))
   val alarmActor = sys.actorOf(alarmProps, name = "AlarmActor")
 
   log.info("Starting WebServer")
@@ -37,7 +44,7 @@ object Boot extends App {
 
   def setupPins() = {
     val controller = GpioFactory.getInstance()
-    val pins: Array[GpioPinDigitalInput] = Array(
+    val pins: List[GpioPinDigitalInput] = List(
       //      controller.provisionDigitalInputPin(RaspiPin.GPIO_01, "GPIO_01", PinPullResistance.PULL_DOWN),
       controller.provisionDigitalInputPin(RaspiPin.GPIO_02, "GPIO_02", PinPullResistance.PULL_DOWN), // I2C
       controller.provisionDigitalInputPin(RaspiPin.GPIO_03, "GPIO_03", PinPullResistance.PULL_DOWN), // I2C
