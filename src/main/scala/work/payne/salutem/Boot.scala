@@ -32,14 +32,12 @@ object Boot extends App {
   val alarmProps = Props(new AlarmActor(allZones, allPins))
   val alarmActor = sys.actorOf(alarmProps, name = "AlarmActor")
 
-  log.info("Starting WebServer")
+
   val port = 8080
+  val address = "0.0.0.0"
+  log.info(s"Starting WebServer on $address:$port")
   val webserver = new WebServer(alarmActor)
-  Http().bindAndHandle(webserver.route(),"localhost", port)
-
-
-
-
+  Http().bindAndHandle(webserver.route(), address, port)
 
 
 
