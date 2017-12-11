@@ -3,12 +3,11 @@ package work.payne.salutem
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef}
+import akka.pattern.ask
 import work.payne.salutem.AlarmActor.Methods._
 import work.payne.salutem.api.models._
-import akka.pattern.ask
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.TimeUnit
 
 /**
   * Created by dpayne on 11/24/17.
